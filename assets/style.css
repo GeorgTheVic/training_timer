@@ -104,6 +104,10 @@ section {
 
 body {
     line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
 }
 
 ol,
@@ -129,4 +133,7 @@ table {
     border-spacing: 0;
 }
 
-
+.main {
+    margin: 0 auto;
+    max-width: 300px;
+}
