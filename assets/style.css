@@ -134,6 +134,35 @@ table {
 }
 
 .main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     margin: 0 auto;
-    max-width: 300px;
+    padding: 0 15px;
+}
+
+.main__title {
+    margin-bottom: 20px;
+    font-size: 50px;
+    text-align: center;
+}
+
+.timer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 70%;
+    gap: 30px;
+}
+
+.timer__row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+
+    font-size: 30px;
+}
+
+.timer__time {
+    max-width: 50%;
 }
