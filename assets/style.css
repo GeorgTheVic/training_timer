@@ -166,3 +166,8 @@ table {
 .timer__time {
     max-width: 50%;
 }
+
+.timer__button {
+    padding: 5px 80px;
+    font-size: 30px;
+}
