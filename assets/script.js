@@ -1,39 +1,47 @@
+// loading site content
 document.addEventListener('DOMContentLoaded', function () {
-    const get_ready = document.querySelector('#get__ready'),
-        button_go = document.querySelector('.timer__button')
+    // variables
+    const get_ready = document.querySelector('#get_ready'),
+        first_phaze = document.querySelector('#first_phaze'),
+        button_go = document.querySelector('#timer_button'),
+        reps = document.querySelector('#timer_button')
 
-    function getTime(field) {
-        const lastTwoChars = +field.value.slice(-2)
+    let timeStop = true
 
-        return lastTwoChars
-    }
+    // functions
 
-    function setTime(digits) {
+    // set time numbers
+    function timer(field) {
+        let time = field.value
+        timeStop = false
 
-        get_ready.value = `00:0${digits}`
+        let minutes = time.slice(0, 2),
+            seconds = time.slice(3, 5)
 
-        console.log('Time is over')
+        console.log(minutes, seconds)
 
-    }
-
-    function timer(time) {
         const intervalID = setInterval(() => {
 
             time--
 
             if (time === 0) {
                 clearInterval(intervalID)
+
+                timeStop = true
+
+                field.value = `${minutes}:${seconds}`
+
+                return timeStop
             }
 
-            setTime(time)
+            field.value = `${minutes}:${seconds}`
         }, 1000)
     }
 
-
+    // launch timers from pushing button
     button_go.addEventListener('click', function (event) {
         event.preventDefault()
 
-        timer(getTime(get_ready))
-
+        timer(get_ready)
     })
 })
