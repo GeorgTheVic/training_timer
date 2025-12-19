@@ -6,7 +6,9 @@ document.addEventListener('DOMContentLoaded', function () {
         button_go = document.querySelector('#timer_button'),
         reps = document.querySelector('#timer_button')
 
-    let timeStop = true
+    let timeStop = true,
+        minToStr = 0,
+        secToStr = 0
 
     // functions
 
@@ -22,25 +24,33 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const intervalID = setInterval(() => {
 
-            time--
+            minutes--
+            seconds--
+
+            minToStr = minutes.toString().padStart(2, '0'),
+                secToStr = seconds.toString().padStart(2, '0')
 
             if (time === 0) {
                 clearInterval(intervalID)
 
                 timeStop = true
 
-                field.value = `${minutes}:${seconds}`
+                field.value = `${minToStr}:${secToStr}`
 
                 return timeStop
             }
 
-            field.value = `${minutes}:${seconds}`
+            field.value = `${minToStr}:${secToStr}`
         }, 1000)
     }
 
     // launch timers from pushing button
     button_go.addEventListener('click', function (event) {
         event.preventDefault()
+
+        const endTime = '10:22'
+
+        console.log(parseInt(endTime))
 
         timer(get_ready)
     })
