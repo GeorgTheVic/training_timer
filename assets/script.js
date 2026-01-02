@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const timerButton = document.getElementById('timer_button');
     const getReadyInput = document.getElementById('get_ready');
     const firstPhaseInput = document.getElementById('first_phaze');
-    const pauseInput = document.getElementById('pausa'); // Новая пауза
+    const pauseInput = document.getElementById('pausa'); // Пауза внутри повторения
     const secondPhaseInput = document.getElementById('second_phaze');
     const repsInput = document.getElementById('reps');
     const totalTimeInput = document.querySelector('input[type="time"]');
@@ -75,8 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const reps = parseInt(repsInput.value) || 1;
 
         // Общее время = подготовка + (фаза1 + пауза + фаза2) * повторения
-        // Пауза между повторениями не включается в последнее повторение
-        const totalSeconds = getReady + (phase1 + pause + phase2) * reps - pause;
+        const totalSeconds = getReady + (phase1 + pause + phase2) * reps;
 
         const hours = Math.floor(totalSeconds / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -132,33 +131,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
         switch(currentPhase) {
             case 'preparation':
-                // Подготовка → Фаза 1
+                // Подготовка → Фаза 1 (первое повторение)
                 currentPhase = 'phase1';
+                currentRep = 1;
                 remainingTime = parseInt(firstPhaseInput.value) || 0;
                 updateDisplay(remainingTime, `Фаза 1 - Повторение ${currentRep}/${totalReps}`);
                 break;
 
             case 'phase1':
-                // Фаза 1 → Пауза
+                // Фаза 1 → Пауза (внутри повторения)
                 currentPhase = 'pause';
                 remainingTime = parseInt(pauseInput.value) || 0;
                 updateDisplay(remainingTime, `Пауза - Повторение ${currentRep}/${totalReps}`);
                 break;
 
             case 'pause':
-                // Пауза → Фаза 2
+                // Пауза → Фаза 2 (внутри повторения)
                 currentPhase = 'phase2';
                 remainingTime = parseInt(secondPhaseInput.value) || 0;
                 updateDisplay(remainingTime, `Фаза 2 - Повторение ${currentRep}/${totalReps}`);
                 break;
 
             case 'phase2':
-                // Фаза 2 → либо следующее повторение, либо завершение
+                // Фаза 2 → либо Фаза 1 следующего повторения, либо завершение
                 if (currentRep < totalReps) {
-                    // Есть еще повторения: Фаза 2 → Пауза между повторениями
-                    currentPhase = 'pause';
-                    remainingTime = parseInt(pauseInput.value) || 0;
-                    updateDisplay(remainingTime, `Пауза - Повторение ${currentRep}/${totalReps}`);
+                    // Есть еще повторения: переходим к Фазе 1 следующего повторения
+                    currentRep++;
+                    currentPhase = 'phase1';
+                    remainingTime = parseInt(firstPhaseInput.value) || 0;
+                    updateDisplay(remainingTime, `Фаза 1 - Повторение ${currentRep}/${totalReps}`);
                 } else {
                     // Все повторения завершены
                     stopTimer();
@@ -199,11 +200,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 remainingTime--;
                 updateDisplay(remainingTime, phaseDisplay.textContent);
             } else {
-                // Если текущая фаза - Фаза 2, проверяем, нужно ли увеличить счетчик повторений
-                if (currentPhase === 'phase2') {
-                    // При переходе от фазы 2 либо к следующему повторению, либо к завершению
-                    // Счетчик повторений увеличивается в функции nextPhase
-                }
                 nextPhase();
             }
         }, 1000);
@@ -261,14 +257,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Инициализируем отображение
     updateDisplay(parseInt(getReadyInput.value) || 0, 'Готов к тренировке');
-
-    // Обновляем логику для правильного отображения текущего повторения
-    // При переходе от Фазы 2 к следующему повторению
-    const originalNextPhase = nextPhase;
-    nextPhase = function() {
-        if (currentPhase === 'phase2' && currentRep < totalReps) {
-            currentRep++; // Увеличиваем счетчик повторений при переходе от Фазы 2
-        }
-        originalNextPhase.call(this);
-    };
 });
