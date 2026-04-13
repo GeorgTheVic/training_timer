@@ -1,59 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Training timer</title>
-    <link rel="stylesheet" href="assets/style.css">
+    <title>Workout Timer</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-    <main class="main">
-        <h1 class="main__title">
-                Timer for your traininig
-            </h1>
+    <div class="container">
+        <header>
+            <h1>Workout Timer</h1>
+        </header>
 
-        <form class="timer">
-            <div class="timer__row">
-                <p class="timer__description">Get ready</p>
-
-                <!-- <input id="get_ready" type="time" class="timer__time"> -->
-                <input id="get_ready" type="number" class="timer__time">
+        <section id="settings" class="settings-grid">
+            <div class="input-group">
+                <label for="prepTime">Подготовка (сек):</label>
+                <input type="number" id="prepTime" min="0" placeholder="0">
             </div>
-            <div class="timer__row">
-                <p class="timer__description">First phaze</p>
-
-                <!-- <input id="first_phaze" type="time" class="timer__time"> -->
-                <input id="first_phaze" type="number" class="timer__time">
+            <div class="input-group">
+                <label for="phase1Time">Фаза 1 (сек):</label>
+                <input type="number" id="phase1Time" min="0" placeholder="0">
             </div>
-            <div class="timer__row">
-                <p class="timer__description">Pausa</p>
-
-                <!-- <input type="time" class="timer__time"> -->
-                <input id="pausa" type="number" class="timer__time">
+            <div class="input-group">
+                <label for="pauseTime">Пауза (сек):</label>
+                <input type="number" id="pauseTime" min="0" placeholder="0">
             </div>
-            <div class="timer__row">
-                <p class="timer__description">Second phaze</p>
-
-                <!-- <input type="time" class="timer__time"> -->
-                <input id="second_phaze" type="number" class="timer__time">
+            <div class="input-group">
+                <label for="phase2Time">Фаза 2 (сек):</label>
+                <input type="number" id="phase2Time" min="0" placeholder="0">
             </div>
-            <div class="timer__row">
-                <p class="timer__description">Reps</p>
-
-                <input id="reps" type="number" class="timer__time">
+            <div class="input-group">
+                <label for="reps">Количество повторений:</label>
+                <input type="number" id="reps" min="1" placeholder="1">
             </div>
-            <div class="timer__row">
-                <p class="timer__description">Total time</p>
+        </section>
 
-                <input type="time" class="timer__time">
+        <section id="display" class="hidden">
+            <div id="status-container">
+                <div id="reps-display">Раунд: <span id="remaining-reps">0</span> / <span id="total-reps">0</span></div>
+                <h2 id="current-phase">Подготовка</h2>
+                <div id="timer-display">00:00</div>
             </div>
+        </section>
 
-            <button id="timer_button" class="timer__button" type="submit">Go</button>
-        </form>
-    </main>
-    <script src="assets/script.js"></script>
+        <div class="controls">
+            <button id="startBtn" class="btn btn-primary">Старт</button>
+            <button id="pauseBtn" class="btn btn-secondary hidden">Пауза</button>
+            <button id="resumeBtn" class="btn btn-primary hidden">Продолжить</button>
+            <button id="restartBtn" class="btn btn-primary hidden">Заново</button>
+            <button id="menuBtn" class="btn btn-secondary hidden">В меню</button>
+            <button id="stopBtn" class="btn btn-danger hidden">Стоп</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
 </body>
-
 </html>

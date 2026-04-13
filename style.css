@@ -1,0 +1,169 @@
+:root {
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-color: #e0e0e0;
+    --primary: #4caf50;
+    --secondary: #2196f3;
+    --danger: #f44336;
+    --prep-color: #ffeb3b;
+    --phase1-color: #4caf50;
+    --pause-color: #2196f3;
+    --phase2-color: #ff9800;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 600px;
+    background-color: var(--card-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    text-align: center;
+}
+
+header h1 {
+    margin-bottom: 2rem;
+    font-weight: 300;
+}
+
+.settings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 2rem;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.input-group label {
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+    color: #999;
+}
+
+.input-group input {
+    background: #333;
+    border: 1px solid #444;
+    color: white;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: transform 0.1s, opacity 0.2s;
+    flex: 1;
+    min-width: 120px;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-primary { background-color: var(--primary); color: black; }
+.btn-secondary { background-color: var(--secondary); color: white; }
+.btn-danger { background-color: var(--danger); color: white; }
+
+.hidden {
+    display: none !important;
+}
+
+#status-container {
+    margin-top: 1rem;
+    padding: 2rem;
+    border: 2px solid #333;
+    border-radius: 12px;
+}
+
+#current-phase {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+#timer-display {
+    font-size: 6rem;
+    font-weight: bold;
+    margin: 1rem 0;
+    font-family: monospace;
+}
+
+/* Hide number input arrows */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+#reps-display {
+    font-size: 2rem;
+    color: #aaa;
+    margin-bottom: 1rem;
+}
+
+#remaining-reps, #total-reps {
+    color: var(--text-color);
+    font-weight: bold;
+}
+
+/* Phase Colors */
+.phase-prep { color: var(--prep-color); }
+.phase-1 { color: var(--phase1-color); }
+.phase-pause { color: var(--pause-color); }
+.phase-2 { color: var(--phase2-color); }
+.phase-finished { color: var(--primary); }
+
+@media (max-width: 480px) {
+    #timer-display {
+        font-size: 4rem;
+    }
+    #current-phase {
+        font-size: 1.8rem;
+    }
+    .container {
+        padding: 1rem;
+    }
+}
