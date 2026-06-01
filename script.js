@@ -5,6 +5,7 @@ const currentPhaseEl = document.getElementById('current-phase')
 const timerDisplayEl = document.getElementById('timer-display')
 const remainingRepsEl = document.getElementById('remaining-reps')
 const totalRepsEl = document.getElementById('total-reps')
+const totalTimeEl = document.getElementById('total-time')
 
 const repsInput = document.getElementById('reps')
 const prepInput = document.getElementById('prepTime')
@@ -28,9 +29,12 @@ function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)()
     }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+    }
 }
 
-function playBeep(frequency = 440, duration = 0.2, type = 'sine') {
+function playTone(frequency = 440, duration = 0.2, type = 'sine', volume = 0.5) {
     if (!audioCtx) return
     const oscillator = audioCtx.createOscillator()
     const gainNode = audioCtx.createGain()
@@ -38,7 +42,7 @@ function playBeep(frequency = 440, duration = 0.2, type = 'sine') {
     oscillator.type = type
     oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime)
 
-    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime)
+    gainNode.gain.setValueAtTime(volume, audioCtx.currentTime)
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration)
 
     oscillator.connect(gainNode)
@@ -48,11 +52,27 @@ function playBeep(frequency = 440, duration = 0.2, type = 'sine') {
     oscillator.stop(audioCtx.currentTime + duration)
 }
 
+function playStartPhase() {
+    // Energetic double beep
+    playTone(660, 0.15, 'square', 0.6)
+    setTimeout(() => playTone(880, 0.2, 'square', 0.6), 200)
+}
+
+function playPausePhase() {
+    // Calm low tone
+    playTone(330, 0.4, 'sine', 0.6)
+}
+
+function playTick() {
+    // Short click for last seconds
+    playTone(880, 0.05, 'triangle', 0.4)
+}
+
 function playGong() {
     if (!audioCtx) return
-    // Simple gong approximation using multiple frequencies
-    ;[200, 300, 450].forEach(freq => {
-        playBeep(freq, 1.5, 'triangle')
+    // Rich multiple frequency gong
+    ;[200, 300, 450, 600].forEach(freq => {
+        playTone(freq, 2.0, 'triangle', 0.7)
     })
 }
 
@@ -81,9 +101,19 @@ function loadSettings() {
 }
 
 // Timer Logic
-let timerId = null
+let animFrameId = null
 let state = 'IDLE' // IDLE, PREP, PHASE1, PAUSE, PHASE2, FINISHED
-let timeLeft = 0
+
+// Time tracking
+let phaseEndTime = 0
+let workoutStartTime = 0
+let totalPausedTime = 0
+let pauseStartTime = 0
+
+let currentPhaseDuration = 0 // in seconds
+let lastTickSecond = -1
+let lastTotalTimeSecond = -1
+
 let currentReps = 0
 let totalReps = 0
 
@@ -92,10 +122,27 @@ function getVal(input) {
     return isNaN(v) ? 0 : v
 }
 
-function updateDisplay() {
-    const minutes = Math.floor(timeLeft / 60)
-    const seconds = timeLeft % 60
-    timerDisplayEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+function formatTime(totalSeconds) {
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+}
+
+function updateDisplay(secondsLeft) {
+    if (secondsLeft !== lastTickSecond) {
+        timerDisplayEl.textContent = formatTime(secondsLeft)
+        lastTickSecond = secondsLeft
+        
+        // Pulse animation for active timer
+        if (state !== 'IDLE' && state !== 'FINISHED' && state !== 'PAUSED') {
+            timerDisplayEl.classList.remove('pulse-anim')
+            // trigger reflow
+            void timerDisplayEl.offsetWidth
+            timerDisplayEl.classList.add('pulse-anim')
+        } else {
+            timerDisplayEl.classList.remove('pulse-anim')
+        }
+    }
 
     // Show current round: Total - Remaining + 1
     const currentRound = totalReps - currentReps + (state === 'FINISHED' ? 0 : 1)
@@ -129,56 +176,72 @@ function updateDisplay() {
     }
 }
 
+function setPhase(newState, durationSec) {
+    state = newState
+    currentPhaseDuration = durationSec
+    phaseEndTime = Date.now() + durationSec * 1000
+    
+    // Play sound based on phase
+    if (state === 'PHASE1' || state === 'PHASE2') {
+        playStartPhase()
+    } else if (state === 'PAUSE') {
+        playPausePhase()
+    } else if (state === 'PREP') {
+        playTone(440, 0.3, 'sine', 0.5)
+    }
+    
+    updateDisplay(durationSec)
+}
+
 function nextPhase() {
     const p1 = getVal(phase1Input)
     const p2 = getVal(phase2Input)
     const pause = getVal(pauseInput)
 
     if (state === 'PREP') {
-        playBeep(880, 0.3)
-        state = 'PHASE1'
-        timeLeft = p1
+        setPhase('PHASE1', p1)
     } else if (state === 'PHASE1') {
-        playBeep(440, 0.2)
-        state = 'PAUSE'
-        timeLeft = pause
+        setPhase('PAUSE', pause)
     } else if (state === 'PAUSE') {
-        playBeep(440, 0.2)
-        state = 'PHASE2'
-        timeLeft = p2
+        setPhase('PHASE2', p2)
     } else if (state === 'PHASE2') {
         currentReps--
         if (currentReps > 0) {
-            playBeep(440, 0.2)
-            state = 'PHASE1'
-            timeLeft = p1
+            setPhase('PHASE1', p1)
         } else {
             state = 'FINISHED'
-            timeLeft = 0
             stopTimerInternal()
             playGong()
             showControls('FINISHED')
-            updateDisplay()
+            updateDisplay(0)
+            timerDisplayEl.classList.remove('pulse-anim')
             return
         }
     }
 
-    if (timeLeft === 0 && state !== 'FINISHED') {
+    // Skip empty phases automatically
+    if (currentPhaseDuration === 0 && state !== 'FINISHED') {
         nextPhase()
-    } else {
-        updateDisplay()
     }
 }
 
 function tick() {
-    if (timeLeft > 0) {
-        timeLeft--
-        updateDisplay()
-        if (timeLeft === 0) {
+    if (state === 'PAUSED' || state === 'IDLE') return
+
+    const now = Date.now()
+
+    if (state !== 'FINISHED') {
+        let timeLeftMs = phaseEndTime - now
+        if (timeLeftMs <= 0) {
             nextPhase()
+        } else {
+            let secondsLeft = Math.ceil(timeLeftMs / 1000)
+            updateDisplay(secondsLeft)
         }
-    } else if (state === 'PREP' || state === 'FINISHED') {
-         if (timeLeft === 0 && state !== 'FINISHED') nextPhase()
+    }
+
+    if (state !== 'IDLE' && state !== 'FINISHED' && state !== 'PAUSED') {
+        animFrameId = requestAnimationFrame(tick)
     }
 }
 
@@ -198,16 +261,23 @@ function startTimer() {
 
     totalReps = reps || 1
     currentReps = totalReps
+    
+    workoutStartTime = Date.now()
+    totalPausedTime = 0
+    lastTotalTimeSecond = -1
+    
+    // Вычисляем общее время и время под нагрузкой
+    const totalDuration = prep + (p1 + pause + p2) * totalReps
+    const tensionDuration = (p1 + p2) * totalReps
+    totalTimeEl.textContent = `${formatTime(totalDuration)} (под нагрузкой: ${formatTime(tensionDuration)})`
 
     if (prep > 0) {
-        state = 'PREP'
-        timeLeft = prep
+        setPhase('PREP', prep)
     } else {
-        state = 'PHASE1'
-        timeLeft = p1
+        setPhase('PHASE1', p1)
     }
 
-    if (timeLeft === 0 && state !== 'FINISHED') {
+    if (currentPhaseDuration === 0 && state !== 'FINISHED') {
         nextPhase()
     }
 
@@ -215,22 +285,37 @@ function startTimer() {
     displaySection.classList.remove('hidden')
     showControls('RUNNING')
 
-    updateDisplay()
-    timerId = setInterval(tick, 1000)
+    animFrameId = requestAnimationFrame(tick)
 }
 
 function pauseTimer() {
-    clearInterval(timerId)
+    state = 'PAUSED'
+    pauseStartTime = Date.now()
+    cancelAnimationFrame(animFrameId)
+    timerDisplayEl.classList.remove('pulse-anim')
     showControls('PAUSED')
 }
 
 function resumeTimer() {
-    timerId = setInterval(tick, 1000)
+    initAudio()
+    
+    const now = Date.now()
+    const pauseDuration = now - pauseStartTime
+    totalPausedTime += pauseDuration
+    phaseEndTime += pauseDuration
+    
+    // Resume current phase
+    state = currentPhaseEl.className.includes('prep') ? 'PREP' : 
+            currentPhaseEl.className.includes('1') ? 'PHASE1' : 
+            currentPhaseEl.className.includes('pause') ? 'PAUSE' : 'PHASE2'
+            
     showControls('RUNNING')
+    animFrameId = requestAnimationFrame(tick)
 }
 
 function stopTimerInternal() {
-    clearInterval(timerId)
+    cancelAnimationFrame(animFrameId)
+    timerDisplayEl.classList.remove('pulse-anim')
 }
 
 function stopTimer() {
@@ -274,9 +359,7 @@ pauseBtn.addEventListener('click', pauseTimer)
 resumeBtn.addEventListener('click', resumeTimer)
 restartBtn.addEventListener('click', startTimer)
 menuBtn.addEventListener('click', stopTimer)
-stopBtn.addEventListener('click', () => {
-    stopTimer()
-})
+stopBtn.addEventListener('click', stopTimer)
 
 allInputs.forEach(input => {
     input.addEventListener('input', saveSettings)
