@@ -29,27 +29,64 @@ function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)()
     }
+    
     if (audioCtx.state === 'suspended') {
         audioCtx.resume()
     }
+
+    // Хак для разблокировки AudioContext на iOS (Safari)
+    // Проигрываем пустой звук, чтобы браузер дал разрешение на вывод аудио
+    const buffer = audioCtx.createBuffer(1, 1, 22050)
+    const source = audioCtx.createBufferSource()
+    source.buffer = buffer
+    source.connect(audioCtx.destination)
+    if (source.start) {
+        source.start(0)
+    } else {
+        source.noteOn(0)
+    }
 }
+
+// Глобальный слушатель кликов, чтобы гарантированно "будить" аудио-контекст 
+// если он уснул из-за неактивности вкладки
+document.addEventListener('click', () => {
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume()
+    }
+}, { passive: true })
 
 function playTone(frequency = 440, duration = 0.2, type = 'sine', volume = 0.5) {
     if (!audioCtx) return
+    
+    // Пробуем разбудить перед каждым звуком
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+    }
+
     const oscillator = audioCtx.createOscillator()
     const gainNode = audioCtx.createGain()
 
     oscillator.type = type
     oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime)
 
+    // Используем setTargetAtTime для более безопасного затухания (exponentialRamp может крашиться в некоторых браузерах)
     gainNode.gain.setValueAtTime(volume, audioCtx.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration)
+    gainNode.gain.setTargetAtTime(0.0001, audioCtx.currentTime, duration / 3)
 
     oscillator.connect(gainNode)
     gainNode.connect(audioCtx.destination)
 
-    oscillator.start()
-    oscillator.stop(audioCtx.currentTime + duration)
+    if (oscillator.start) {
+        oscillator.start()
+    } else {
+        oscillator.noteOn(0)
+    }
+    
+    if (oscillator.stop) {
+        oscillator.stop(audioCtx.currentTime + duration)
+    } else {
+        oscillator.noteOff(audioCtx.currentTime + duration)
+    }
 }
 
 function playStartPhase() {
