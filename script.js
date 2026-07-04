@@ -400,6 +400,12 @@ stopBtn.addEventListener('click', stopTimer)
 
 allInputs.forEach(input => {
     input.addEventListener('input', saveSettings)
+    input.addEventListener('focus', function() {
+        setTimeout(() => this.select(), 10)
+    })
+    input.addEventListener('click', function() {
+        this.select()
+    })
 })
 
 // Initialize
